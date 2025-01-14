@@ -1,0 +1,11 @@
+.DS_Store
+*.swp
+.idea/
+.vscode/
+__pycache__/
+*.pyc
+# real secrets and backups never belong in git
+*.secret.yaml
+*.bak
+*.trn
+kubeconfig*
