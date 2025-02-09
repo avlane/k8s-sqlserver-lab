@@ -1,0 +1,28 @@
+# Headless Service: gives the StatefulSet Pod a stable DNS name (sqlserver-0.sqlserver-headless).
+apiVersion: v1
+kind: Service
+metadata:
+  name: sqlserver-headless
+  namespace: sqllab
+spec:
+  clusterIP: None
+  selector:
+    app: sqlserver
+  ports:
+    - name: sql
+      port: 1433
+      targetPort: 1433
+---
+# Normal ClusterIP Service for clients inside the cluster.
+apiVersion: v1
+kind: Service
+metadata:
+  name: sqlserver
+  namespace: sqllab
+spec:
+  selector:
+    app: sqlserver
+  ports:
+    - name: sql
+      port: 1433
+      targetPort: 1433
