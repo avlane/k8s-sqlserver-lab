@@ -30,3 +30,12 @@ Connect from your machine:
 
 (or use Azure Data Studio or SSMS against `localhost,1433`; `-C` trusts the container's self-signed certificate.)
 Expected: one row starting with `Microsoft SQL Server 2022 (RTM-CU15) ...`.
+
+## Create the sample database
+
+    kubectl -n sqllab port-forward service/sqlserver 1433:1433 &
+    sqlcmd -S localhost,1433 -U sa -C -i sql/init.sql
+
+Expected: `OrderRows` is `1000`. Running it a second time changes nothing.
+The new database gets its recovery model from `model`, which is FULL by default. See the backup notes later: a FULL
+database with no log backups never truncates its log.
