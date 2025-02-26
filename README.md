@@ -29,7 +29,7 @@ Connect from your machine:
     sqlcmd -S localhost,1433 -U sa -C -Q "SELECT @@VERSION"
 
 (or use Azure Data Studio or SSMS against `localhost,1433`; `-C` trusts the container's self-signed certificate.)
-Expected: one row starting with `Microsoft SQL Server 2022 (RTM-CU15) ...`.
+Expected: one row starting with `Microsoft SQL Server 2022 (RTM-CU16) ...`.
 
 ## Create the sample database
 
