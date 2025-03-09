@@ -33,3 +33,14 @@ exceeding the limit the Pod shows `OOMKilled` and exit code 137.
 Developer has Enterprise features but may not be used in production. Express is free with resource caps. The others
 need paid licenses, and licensing in containers and Kubernetes has its own rules (cores, not Pods). I am not the
 person to interpret that; check with whoever owns your license agreement before running anything real.
+
+## 6. Volume permissions (fsGroup)
+
+Since SQL Server 2019 the image runs as a non-root user (`mssql`, UID 10001), not root. A freshly provisioned
+volume is typically owned by root, so the first start can fail with permission errors when SQL Server tries to
+create files under `/var/opt/mssql` (the log shows `Access denied` / `Permission denied`; the Pod restarts in a loop).
+The first version of the StatefulSet had no `securityContext`.
+
+`fsGroup: 10001` on the Pod makes the kubelet set the group of the volume contents to that GID and make them
+group-writable, when the storage driver supports it. Not every driver honours `fsGroup`. If yours does not, you need an
+init container that runs `chown`, which means running something as root and is worth avoiding.
