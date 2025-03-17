@@ -33,6 +33,20 @@ spec:
                 secretKeyRef:
                   name: sqlserver-sa
                   key: MSSQL_SA_PASSWORD
+          readinessProbe:
+            exec:
+              command:
+                - /opt/mssql-tools/bin/sqlcmd
+                - -S
+                - localhost
+                - -U
+                - sa
+                - -P
+                - $(MSSQL_SA_PASSWORD)
+                - -Q
+                - SELECT 1
+            initialDelaySeconds: 20
+            periodSeconds: 10
           volumeMounts:
             - name: data
               mountPath: /var/opt/mssql
