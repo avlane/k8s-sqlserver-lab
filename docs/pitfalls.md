@@ -44,3 +44,22 @@ The first version of the StatefulSet had no `securityContext`.
 `fsGroup: 10001` on the Pod makes the kubelet set the group of the volume contents to that GID and make them
 group-writable, when the storage driver supports it. Not every driver honours `fsGroup`. If yours does not, you need an
 init container that runs `chown`, which means running something as root and is worth avoiding.
+
+## 7. Probes with sqlcmd
+
+The first readiness probe passed `-P $(MSSQL_SA_PASSWORD)` to `sqlcmd` and would never have worked:
+
+- A probe's `exec.command` is run directly, not through a shell, and (as far as I understand the docs) `$(VAR)`
+  references are not expanded there the way they are for a container's own `command`/`args`. `sqlcmd` would receive the
+  literal text `$(MSSQL_SA_PASSWORD)` as the password and fail to log in, so the Pod would stay `0/1` forever.
+- Even if it expanded, a password on a command line is visible in the process list. `sqlcmd` reads the `SQLCMDPASSWORD` environment variable instead, and the StatefulSet now sets it from the same Secret.
+- The tools directory depends on the image: `/opt/mssql-tools/bin` on older images, `/opt/mssql-tools18/bin` on newer
+  ones (tools 18 is where `-C`, trust the server certificate, matters because encryption is on by default). I do not know which one the CU16 image has, so the probe tries both. Check with `kubectl exec sqlserver-0 -- ls /opt`.
+
+The probes now split the jobs:
+
+| probe | what it does | why |
+|---|---|---|
+| startup | `SELECT 1` via sqlcmd, up to 30 x 10s | recovery after a crash can take minutes; holds off the other two |
+| readiness | `SELECT 1` via sqlcmd | take the Pod out of the Service when it cannot answer a query |
+| liveness | TCP connect to 1433 | cheap; a liveness probe that runs queries can restart a busy but healthy server |
