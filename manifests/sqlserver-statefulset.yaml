@@ -39,6 +39,12 @@ spec:
                 secretKeyRef:
                   name: sqlserver-sa
                   key: MSSQL_SA_PASSWORD
+          resources:
+            requests:
+              cpu: 500m
+              memory: 2Gi
+            limits:
+              memory: 2Gi
           startupProbe:
             exec:
               command:
