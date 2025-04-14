@@ -24,7 +24,7 @@ replaced in a later commit.
 ## 4. Memory floor
 
 SQL Server on Linux needs at least about 2 GB of RAM available to the process. A container limit at or just
-above that is not a comfortable fit (see the resource tuning notes once they exist). When the process is killed for
+above that is not a comfortable fit (see `resource-tuning.md`). When the process is killed for
 exceeding the limit the Pod shows `OOMKilled` and exit code 137.
 
 ## 5. Editions and licensing

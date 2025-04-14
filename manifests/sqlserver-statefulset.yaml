@@ -28,6 +28,8 @@ spec:
               value: "Y"
             - name: MSSQL_PID
               value: Developer
+            - name: MSSQL_MEMORY_LIMIT_MB
+              value: "3072"
             - name: MSSQL_SA_PASSWORD
               valueFrom:
                 secretKeyRef:
@@ -42,9 +44,9 @@ spec:
           resources:
             requests:
               cpu: 500m
-              memory: 2Gi
+              memory: 4Gi
             limits:
-              memory: 2Gi
+              memory: 4Gi
           startupProbe:
             exec:
               command:
