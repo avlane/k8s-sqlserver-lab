@@ -39,3 +39,12 @@ Expected: one row starting with `Microsoft SQL Server 2022 (RTM-CU16) ...`.
 Expected: `OrderRows` is `1000`. Running it a second time changes nothing.
 The new database gets its recovery model from `model`, which is FULL by default. See the backup notes later: a FULL
 database with no log backups never truncates its log.
+
+## Rendering with kustomize
+
+    kubectl kustomize .                 # renders everything; needs no cluster
+    kubectl apply -k .                  # applies it (the Secret is applied separately)
+
+The image tag is set in one place, the `images:` block of `kustomization.yaml`, which overrides the tag written in
+the StatefulSet. To change the SQL Server version, change that block. The tag in the StatefulSet is only the
+starting point and goes stale, so treat `kubectl kustomize .` output as the truth.
