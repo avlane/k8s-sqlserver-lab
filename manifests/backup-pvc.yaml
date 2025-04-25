@@ -1,0 +1,13 @@
+# Backups are written by the SQL Server process (BACKUP ... TO DISK), so this volume
+# has to be mounted in the SQL Server Pod itself, not in the job that triggers the backup.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sqlserver-backups
+  namespace: sqllab
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi

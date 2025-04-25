@@ -3,6 +3,7 @@ kind: Kustomization
 namespace: sqllab
 resources:
   - manifests/namespace.yaml
+  - manifests/backup-pvc.yaml
   - manifests/sqlserver-service.yaml
   - manifests/sqlserver-statefulset.yaml
 images:
