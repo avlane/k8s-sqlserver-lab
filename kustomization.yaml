@@ -6,6 +6,15 @@ resources:
   - manifests/backup-pvc.yaml
   - manifests/sqlserver-service.yaml
   - manifests/sqlserver-statefulset.yaml
+generatorOptions:
+  # Jobs read the scripts when they start, so a stable name is easier than a hash suffix
+  disableNameSuffixHash: true
+configMapGenerator:
+  - name: sql-scripts
+    files:
+      - sql/init.sql
+      - sql/backup.sql
+      - sql/memory.sql
 images:
   - name: mcr.microsoft.com/mssql/server
     newTag: 2022-CU17-ubuntu-22.04
