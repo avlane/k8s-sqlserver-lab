@@ -1,0 +1,30 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: sqlserver-backup
+  namespace: sqllab
+spec:
+  schedule: "0 2 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: sqlcmd
+              image: mcr.microsoft.com/mssql/server:2022-CU16-ubuntu-22.04
+              command: ["/opt/mssql-tools18/bin/sqlcmd"]
+              args: ["-S", "sqlserver", "-U", "sa", "-C", "-i", "/scripts/backup.sql", "-v", "BACKUP_DIR=/backups"]
+              env:
+                - name: SQLCMDPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: sqlserver-sa
+                      key: MSSQL_SA_PASSWORD
+              volumeMounts:
+                - name: scripts
+                  mountPath: /scripts
+          volumes:
+            - name: scripts
+              configMap:
+                name: sql-scripts
