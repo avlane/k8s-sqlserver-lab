@@ -5,16 +5,33 @@ metadata:
   namespace: sqllab
 spec:
   schedule: "0 2 * * *"
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 3600
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
   jobTemplate:
     spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 3600
+      ttlSecondsAfterFinished: 604800
       template:
         spec:
           restartPolicy: OnFailure
           containers:
             - name: sqlcmd
               image: mcr.microsoft.com/mssql/server:2022-CU16-ubuntu-22.04
-              command: ["/opt/mssql-tools18/bin/sqlcmd"]
-              args: ["-S", "sqlserver", "-U", "sa", "-C", "-i", "/scripts/backup.sql", "-v", "BACKUP_DIR=/backups"]
+              command:
+                - /bin/bash
+                - -c
+                - |
+                  set -eu
+                  SQLCMD=""
+                  for p in /opt/mssql-tools18/bin/sqlcmd /opt/mssql-tools/bin/sqlcmd; do
+                    if [ -x "$p" ]; then SQLCMD="$p"; break; fi
+                  done
+                  [ -n "$SQLCMD" ] || { echo "sqlcmd not found in the image" >&2; exit 1; }
+                  # -b makes sqlcmd exit non-zero on a SQL error, which is what fails the Job
+                  exec "$SQLCMD" -S sqlserver -U sa -C -b -l 30 -v BACKUP_DIR=/backups -i /scripts/backup.sql
               env:
                 - name: SQLCMDPASSWORD
                   valueFrom:

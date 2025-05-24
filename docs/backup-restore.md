@@ -28,3 +28,13 @@ Expected output, in `kubectl -n sqllab logs job/<job>`:
     10 percent processed.
     ...
     Backup finished and verified.
+
+## Why the CronJob looks the way it does
+
+The first version just ran `sqlcmd -i backup.sql`. Problems I expect with that:
+
+- **A failed backup looks like a success.** Without `-b`, `sqlcmd` prints the error and still exits 0, so the Job is `Complete`. With `-b` any SQL error gives a non-zero exit code and the Job fails (and shows in `kubectl get jobs`).
+- **The tools path.** `/opt/mssql-tools18/bin/sqlcmd` was hard-coded; the script now looks for both locations.
+- **Overlap.** `concurrencyPolicy: Forbid` skips a run when the previous one is still going.
+- **Missed runs and piles of Jobs.** `startingDeadlineSeconds`, history limits, `activeDeadlineSeconds` and `ttlSecondsAfterFinished` bound all of that.
+- **Retries.** `backoffLimit: 2` retries a failing backup twice with back-off. A backup that fails because the server is down will fail all three times, which is fine; the Job is `Failed` and someone needs to look.
