@@ -1,0 +1,42 @@
+# Run on demand, not on a schedule:
+#   kubectl -n sqllab delete job sqlserver-restore-test --ignore-not-found
+#   kubectl apply -f manifests/restore-test-job.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sqlserver-restore-test
+  namespace: sqllab
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 3600
+  ttlSecondsAfterFinished: 86400
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: sqlcmd
+          image: mcr.microsoft.com/mssql/server:2022-CU16-ubuntu-22.04
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -eu
+              SQLCMD=""
+              for p in /opt/mssql-tools18/bin/sqlcmd /opt/mssql-tools/bin/sqlcmd; do
+                if [ -x "$p" ]; then SQLCMD="$p"; break; fi
+              done
+              [ -n "$SQLCMD" ] || { echo "sqlcmd not found in the image" >&2; exit 1; }
+              exec "$SQLCMD" -S sqlserver -U sa -C -b -l 30 -i /scripts/restore-test.sql
+          env:
+            - name: SQLCMDPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: sqlserver-sa
+                  key: MSSQL_SA_PASSWORD
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+      volumes:
+        - name: scripts
+          configMap:
+            name: sql-scripts

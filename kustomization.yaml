@@ -15,6 +15,7 @@ configMapGenerator:
     files:
       - sql/init.sql
       - sql/backup.sql
+      - sql/restore-test.sql
       - sql/memory.sql
 images:
   - name: mcr.microsoft.com/mssql/server
