@@ -38,3 +38,20 @@ The first version just ran `sqlcmd -i backup.sql`. Problems I expect with that:
 - **Overlap.** `concurrencyPolicy: Forbid` skips a run when the previous one is still going.
 - **Missed runs and piles of Jobs.** `startingDeadlineSeconds`, history limits, `activeDeadlineSeconds` and `ttlSecondsAfterFinished` bound all of that.
 - **Retries.** `backoffLimit: 2` retries a failing backup twice with back-off. A backup that fails because the server is down will fail all three times, which is fine; the Job is `Failed` and someone needs to look.
+
+## Restore test
+
+`manifests/restore-test-job.yaml` runs `sql/restore-test.sql`: find the newest full backup of `LabDb` in `msdb`,
+restore it as `LabDb_restoretest`, run `DBCC CHECKDB`, compare row counts with the source table and drop the copy.
+
+The first version hard-coded the logical file names (`LabDb`, `LabDb_log`) in the `MOVE` clauses. That works
+only while the source database keeps exactly those names, and breaks the first time someone adds a filegroup. The current
+script reads the file list for that backup set from `msdb.dbo.backupfile` and builds the clauses with `STRING_AGG`.
+It also drops the half-restored copy when something fails, so a failed test does not leave a database behind that
+makes the next run fail with "database exists" confusion (`REPLACE` covers most of that anyway).
+
+Limits: it restores onto the same instance. A real disaster-recovery test restores onto a different server, with
+nothing but the backup file and the documented procedure. It also trusts `msdb` history; if `msdb` is lost the script finds nothing.
+
+Expected result: `Restore test passed.` and a Job in `Complete` state. If `CHECKDB` finds corruption the
+errors are severity 16, so `sqlcmd -b` exits non-zero and the Job is `Failed`.
