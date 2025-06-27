@@ -48,3 +48,11 @@ database with no log backups never truncates its log.
 The image tag is set in one place, the `images:` block of `kustomization.yaml`, which overrides the tag written in
 the StatefulSet. To change the SQL Server version, change that block. The tag in the StatefulSet is only the
 starting point and goes stale, so treat `kubectl kustomize .` output as the truth.
+
+## Consistency check
+
+    python3 scripts/check_lab.py
+
+Checks (text level only, no cluster, no YAML library): Secret names and keys, generated ConfigMap names, PVC names, Service
+selectors against the StatefulSet Pod labels, CronJob `concurrencyPolicy`, pinned image tags.
+It cannot tell whether a manifest is valid Kubernetes; `kubectl kustomize .` is the other check that can be run without a cluster.
