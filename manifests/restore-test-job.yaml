@@ -13,6 +13,9 @@ spec:
   template:
     spec:
       restartPolicy: Never
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: sqlcmd
           image: mcr.microsoft.com/mssql/server:2022-CU16-ubuntu-22.04
@@ -27,6 +30,18 @@ spec:
               done
               [ -n "$SQLCMD" ] || { echo "sqlcmd not found in the image" >&2; exit 1; }
               exec "$SQLCMD" -S sqlserver -U sa -C -b -l 30 -i /scripts/restore-test.sql
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 256Mi
           env:
             - name: SQLCMDPASSWORD
               valueFrom:

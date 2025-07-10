@@ -63,3 +63,13 @@ The probes now split the jobs:
 | startup | `SELECT 1` via sqlcmd, up to 30 x 10s | recovery after a crash can take minutes; holds off the other two |
 | readiness | `SELECT 1` via sqlcmd | take the Pod out of the Service when it cannot answer a query |
 | liveness | TCP connect to 1433 | cheap; a liveness probe that runs queries can restart a busy but healthy server |
+
+## 8. The helper Pods do not need to be root
+
+The backup and restore-test Pods only run `sqlcmd`, so they run as UID 10001 (the `mssql` user baked into the image)
+with `allowPrivilegeEscalation: false`, all capabilities dropped and the runtime's default seccomp profile.
+`runAsNonRoot: true` works here only because `runAsUser` is set explicitly; the image's default user is `mssql`,
+but being explicit avoids relying on that.
+
+The SQL Server Pod itself is **not** hardened beyond `fsGroup`: I do not know which capabilities and syscalls the
+engine needs, and dropping them blind would be a good way to get a crash loop with a confusing log. If you try it, change one thing at a time.
