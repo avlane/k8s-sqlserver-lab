@@ -19,4 +19,4 @@ configMapGenerator:
       - sql/memory.sql
 images:
   - name: mcr.microsoft.com/mssql/server
-    newTag: 2022-CU17-ubuntu-22.04
+    newTag: 2022-CU19-ubuntu-22.04
