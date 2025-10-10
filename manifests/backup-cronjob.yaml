@@ -15,6 +15,9 @@ spec:
       activeDeadlineSeconds: 3600
       ttlSecondsAfterFinished: 604800
       template:
+        metadata:
+          labels:
+            sql.example/client: "true"
         spec:
           restartPolicy: OnFailure
           securityContext:

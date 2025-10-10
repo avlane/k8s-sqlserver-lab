@@ -56,3 +56,11 @@ starting point and goes stale, so treat `kubectl kustomize .` output as the trut
 Checks (text level only, no cluster, no YAML library): Secret names and keys, generated ConfigMap names, PVC names, Service
 selectors against the StatefulSet Pod labels, CronJob `concurrencyPolicy`, pinned image tags.
 It cannot tell whether a manifest is valid Kubernetes; `kubectl kustomize .` is the other check that can be run without a cluster.
+
+## Who can connect
+
+`manifests/networkpolicy.yaml` allows TCP 1433 into the SQL Server Pod only from Pods labelled
+`sql.example/client: "true"`; the backup and restore-test Pods carry that label. With a CNI that enforces NetworkPolicy, the
+`kubectl port-forward` used above is **not** affected, because it goes through the API server and kubelet and not through the Pod network; that is
+convenient and also means port-forward is a way around the policy for anyone with the RBAC permission to use it.
+With a CNI that does not enforce policies the object does nothing.

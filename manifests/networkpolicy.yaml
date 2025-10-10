@@ -1,0 +1,21 @@
+# Only Pods labelled sql.example/client=true (and the lab's own jobs) may open connections to SQL Server.
+# Enforced only if the cluster's CNI implements NetworkPolicy.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: sqlserver-ingress
+  namespace: sqllab
+spec:
+  podSelector:
+    matchLabels:
+      app: sqlserver
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              sql.example/client: "true"
+      ports:
+        - protocol: TCP
+          port: 1433
