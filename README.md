@@ -7,8 +7,11 @@ write down the pitfalls, not to provide a production recipe.
 
 ## Layout
 
-- `manifests/`: Kubernetes YAML (namespace, Secret example, StatefulSet, Services)
-- `docs/`: notes and pitfalls
+- `kustomization.yaml`: renders the lab (`kubectl kustomize .`), pins the image tag and generates the `sql-scripts` ConfigMap
+- `manifests/`: Kubernetes YAML: namespace, Secret example, StatefulSet, Services, backup PVC, backup CronJob, restore-test Job, NetworkPolicy
+- `sql/`: T-SQL for initialisation, memory, backup and the restore test
+- `docs/`: pitfalls, resource tuning, backup and restore, upgrades, troubleshooting, and the availability group discussion
+- `scripts/check_lab.py`: consistency check across the manifests
 
 ## Try it
 
@@ -29,7 +32,7 @@ Connect from your machine:
     sqlcmd -S localhost,1433 -U sa -C -Q "SELECT @@VERSION"
 
 (or use Azure Data Studio or SSMS against `localhost,1433`; `-C` trusts the container's self-signed certificate.)
-Expected: one row starting with `Microsoft SQL Server 2022 (RTM-CU16) ...`.
+Expected: one row starting with `Microsoft SQL Server 2022 (RTM-CU19) ...`.
 
 ## Create the sample database
 
