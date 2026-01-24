@@ -77,6 +77,8 @@ def check(root):
             secrets[name] = set(mapping_under(doc, r"stringData:")) | set(mapping_under(doc, r"data:"))
     generated = set(re.findall(r"^\s*-\s*name:\s*(\S+)", (root / "kustomization.yaml").read_text(), re.M))
     claims = {name for _, kind, name, _ in docs if kind == "PersistentVolumeClaim"}
+    tag_match = re.search(r"newTag:\s*(\S+)", (root / "kustomization.yaml").read_text())
+    pinned_tag = tag_match.group(1) if tag_match else None
 
     for path, kind, name, doc in docs:
         text = "\n".join(doc)
@@ -97,6 +99,10 @@ def check(root):
             image = m.group(1)
             if ":" not in image.split("/")[-1] or image.endswith(":latest"):
                 problems.append("{}: image {} is not pinned to a tag".format(where, image))
+            elif image.startswith("mcr.microsoft.com/mssql/server:") and pinned_tag and image.split(":")[-1] != pinned_tag:
+                # kustomize overrides the tag, but a plain `kubectl apply -f` of this file would not
+                problems.append("{}: image tag {} differs from the kustomization newTag {}".format(
+                    where, image.split(":")[-1], pinned_tag))
         if kind == "CronJob" and "concurrencyPolicy:" not in text:
             problems.append("{}: CronJob without concurrencyPolicy".format(where))
 

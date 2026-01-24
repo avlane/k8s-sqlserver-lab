@@ -18,3 +18,10 @@ the same image name, so they follow it.
 - **The startup probe has to be generous.** Upgrade scripts can take much longer than a normal start; `failureThreshold: 30` at 10 seconds is five minutes, so raise it for big databases or the Pod will be killed mid-upgrade.
 - **Pin tags.** Moving from one cumulative update to the next is a deliberate change. `latest` or a floating tag would upgrade on any Pod reschedule.
 - A new major version (2022 to a later release) is an in-place upgrade of the data files on the PVC at first start. Try it on a copy.
+
+## Keeping the tag in two places honest
+
+`kustomization.yaml` overrides the image tag, but the manifests under `manifests/` also contain a tag, and
+the restore-test Job is applied with `kubectl apply -f`, which bypasses kustomize. For a while those files said CU16
+while the kustomization said CU19, so the Job would have tested a restore with an older engine than the server's.
+`scripts/check_lab.py` now fails when the tags differ; bump all of them together.
