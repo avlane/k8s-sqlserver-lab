@@ -67,3 +67,4 @@ It cannot tell whether a manifest is valid Kubernetes; `kubectl kustomize .` is 
 `kubectl port-forward` used above is **not** affected, because it goes through the API server and kubelet and not through the Pod network; that is
 convenient and also means port-forward is a way around the policy for anyone with the RBAC permission to use it.
 With a CNI that does not enforce policies the object does nothing.
+Tests for the checker itself: `python3 -m unittest discover -s tests`.
