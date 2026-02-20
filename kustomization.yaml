@@ -18,6 +18,7 @@ configMapGenerator:
       - sql/backup.sql
       - sql/restore-test.sql
       - sql/memory.sql
+      - sql/health.sql
 images:
   - name: mcr.microsoft.com/mssql/server
     newTag: 2022-CU19-ubuntu-22.04

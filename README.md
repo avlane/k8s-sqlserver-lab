@@ -68,3 +68,10 @@ It cannot tell whether a manifest is valid Kubernetes; `kubectl kustomize .` is 
 convenient and also means port-forward is a way around the policy for anyone with the RBAC permission to use it.
 With a CNI that does not enforce policies the object does nothing.
 Tests for the checker itself: `python3 -m unittest discover -s tests`.
+
+## Health check
+
+    sqlcmd -S localhost,1433 -U sa -C -i sql/health.sql
+
+Expected: one row of version information, then the databases with their recovery model. `log_reuse_wait_desc` of
+`LOG_BACKUP` on `LabDb` means the FULL recovery model is waiting for a log backup, as the backup notes warn.
