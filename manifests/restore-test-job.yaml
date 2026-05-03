@@ -19,6 +19,45 @@ spec:
       securityContext:
         seccompProfile:
           type: RuntimeDefault
+      initContainers:
+        - name: wait-for-sql
+          image: mcr.microsoft.com/mssql/server:2022-CU19-ubuntu-22.04
+          command:
+            - /bin/bash
+            - -c
+            - |
+              SQLCMD=""
+              for p in /opt/mssql-tools18/bin/sqlcmd /opt/mssql-tools/bin/sqlcmd; do
+                if [ -x "$p" ]; then SQLCMD="$p"; break; fi
+              done
+              [ -n "$SQLCMD" ] || { echo "sqlcmd not found in the image" >&2; exit 1; }
+              for i in $(seq 1 60); do
+                if "$SQLCMD" -S sqlserver -U sa -C -l 3 -b -Q "SELECT 1" > /dev/null 2>&1; then
+                  echo "SQL Server is reachable"
+                  exit 0
+                fi
+                sleep 5
+              done
+              echo "SQL Server did not become reachable within 5 minutes" >&2
+              exit 1
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 256Mi
+          env:
+            - name: SQLCMDPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: sqlserver-sa
+                  key: MSSQL_SA_PASSWORD
       containers:
         - name: sqlcmd
           image: mcr.microsoft.com/mssql/server:2022-CU19-ubuntu-22.04

@@ -55,3 +55,9 @@ nothing but the backup file and the documented procedure. It also trusts `msdb` 
 
 Expected result: `Restore test passed.` and a Job in `Complete` state. If `CHECKDB` finds corruption the
 errors are severity 16, so `sqlcmd -b` exits non-zero and the Job is `Failed`.
+
+## Waiting for the server
+
+If the restore test is applied right after a restart of `sqlserver-0` (an upgrade, for example) the Service has no ready
+endpoint yet and `sqlcmd` fails to connect, which would fail the Job for a reason that has nothing to do with the backup. An init container
+now retries `SELECT 1` every 5 seconds for up to 5 minutes first. The backup CronJob does not need this: it has `backoffLimit: 2` and a schedule that makes a missed run a non-event.
