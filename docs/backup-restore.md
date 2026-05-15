@@ -61,3 +61,8 @@ errors are severity 16, so `sqlcmd -b` exits non-zero and the Job is `Failed`.
 If the restore test is applied right after a restart of `sqlserver-0` (an upgrade, for example) the Service has no ready
 endpoint yet and `sqlcmd` fails to connect, which would fail the Job for a reason that has nothing to do with the backup. An init container
 now retries `SELECT 1` every 5 seconds for up to 5 minutes first. The backup CronJob does not need this: it has `backoffLimit: 2` and a schedule that makes a missed run a non-event.
+
+## Schedule
+
+`0 2 * * *` with `timeZone: "Etc/UTC"` is 02:00 UTC. Without `timeZone` the CronJob follows the controller manager's time zone, which is usually UTC but not guaranteed. Pick a quiet hour for your workload; compressed full backups still cost I/O and CPU.
+To pause backups, for example during an upgrade: `kubectl -n sqllab patch cronjob sqlserver-backup -p '{"spec":{"suspend":true}}'`.
