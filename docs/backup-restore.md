@@ -66,3 +66,13 @@ now retries `SELECT 1` every 5 seconds for up to 5 minutes first. The backup Cro
 
 `0 2 * * *` with `timeZone: "Etc/UTC"` is 02:00 UTC. Without `timeZone` the CronJob follows the controller manager's time zone, which is usually UTC but not guaranteed. Pick a quiet hour for your workload; compressed full backups still cost I/O and CPU.
 To pause backups, for example during an upgrade: `kubectl -n sqllab patch cronjob sqlserver-backup -p '{"spec":{"suspend":true}}'`.
+
+## Log backups and the recovery model
+
+`LabDb` inherits the FULL recovery model from `model`. In FULL, the transaction log is only truncated by a log backup, so
+with full backups alone the log grows until the volume is full (error 9002, `log_reuse_wait_desc = LOG_BACKUP`). Options:
+
+- take log backups (`sql/backup-log.sql`, scheduled by the next commit), which also allows restoring to a point in time, or
+- switch the database to SIMPLE (`ALTER DATABASE LabDb SET RECOVERY SIMPLE`) if losing everything since the last full backup is acceptable.
+
+The restore test only restores the latest **full** backup. It does not replay log backups, so it says nothing about point-in-time recovery.
