@@ -76,3 +76,10 @@ with full backups alone the log grows until the volume is full (error 9002, `log
 - switch the database to SIMPLE (`ALTER DATABASE LabDb SET RECOVERY SIMPLE`) if losing everything since the last full backup is acceptable.
 
 The restore test only restores the latest **full** backup. It does not replay log backups, so it says nothing about point-in-time recovery.
+
+## Log backup schedule
+
+`manifests/backup-log-cronjob.yaml` runs every 15 minutes, so with a working chain the worst-case data loss from losing the
+backup volume's *latest* file is about that long (and everything, if the volume itself is lost, see the section on off-cluster copies).
+The first log backup after creating the database fails with error 4214 until the first full backup has run; the log CronJob may
+therefore show a failed Job on day one. That is the script doing its job, not a bug.

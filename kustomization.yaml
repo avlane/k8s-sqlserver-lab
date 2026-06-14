@@ -7,6 +7,7 @@ resources:
   - manifests/sqlserver-service.yaml
   - manifests/sqlserver-statefulset.yaml
   - manifests/backup-cronjob.yaml
+  - manifests/backup-log-cronjob.yaml
   - manifests/networkpolicy.yaml
 generatorOptions:
   # Jobs read the scripts when they start, so a stable name is easier than a hash suffix
