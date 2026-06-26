@@ -105,6 +105,8 @@ def check(root):
                     where, image.split(":")[-1], pinned_tag))
         if kind == "CronJob" and "concurrencyPolicy:" not in text:
             problems.append("{}: CronJob without concurrencyPolicy".format(where))
+        if kind == "CronJob" and "timeZone:" not in text:
+            problems.append("{}: CronJob without timeZone".format(where))
 
     # Service selectors must be a subset of the StatefulSet Pod labels
     pod_labels = {}

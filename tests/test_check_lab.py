@@ -53,6 +53,12 @@ class CheckLabTests(unittest.TestCase):
         problems = check_lab.check(root)
         self.assertTrue(any("without concurrencyPolicy" in p for p in problems), problems)
 
+    def test_cronjob_without_time_zone(self):
+        root = self.copy_repo()
+        self.edit(root, "manifests/backup-log-cronjob.yaml", '  timeZone: "Etc/UTC"\n', "")
+        problems = check_lab.check(root)
+        self.assertTrue(any("without timeZone" in p for p in problems), problems)
+
     def test_image_tag_drift(self):
         root = self.copy_repo()
         self.edit(root, "manifests/restore-test-job.yaml", "2022-CU19-ubuntu-22.04", "2022-CU16-ubuntu-22.04")
