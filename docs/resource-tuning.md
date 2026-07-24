@@ -37,3 +37,14 @@ licensing cores are counted for a container whose limit is lower than the host's
 
 The data PVC is 5Gi in the first versions. SQL Server's own growth settings (autogrowth of data and log files) will
 fill it without warning; size the volume with headroom and watch `kubectl exec sqlserver-0 -- df -h /var/opt/mssql`.
+
+## Changing resources on a running Pod
+
+Kubernetes 1.33 made in-place Pod resize a beta feature (on by default, via the Pod `resize` subresource), so CPU and memory
+requests and limits can in principle change without recreating the Pod. For this lab:
+
+- Raising the CPU request/limit in place may work without a restart; I would still check `sys.dm_os_sys_info.cpu_count`, because the engine may only look at the CPU count at start-up.
+- SQL Server reads its memory configuration at start-up (`MSSQL_MEMORY_LIMIT_MB`) and `max server memory` is a separate, runtime setting. Resizing the container's memory limit without also changing `max server memory` just moves the headroom, not the budget. Use `resizePolicy` with `restartPolicy: RestartContainer` for memory so the engine starts with consistent numbers.
+- A StatefulSet manages Pods through its template, so a manual resize is overwritten by the next template change. Treat it as an experiment, then put the result in the manifest.
+
+This is based on the Kubernetes documentation for the feature.
