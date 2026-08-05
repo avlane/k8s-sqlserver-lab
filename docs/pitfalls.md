@@ -73,3 +73,10 @@ but being explicit avoids relying on that.
 
 The SQL Server Pod itself is **not** hardened beyond `fsGroup`: I do not know which capabilities and syscalls the
 engine needs, and dropping them blind would be a good way to get a crash loop with a confusing log. If you try it, change one thing at a time.
+
+## 9. Shutting down and deleting
+
+- When Kubernetes stops the Pod it sends SIGTERM and waits `terminationGracePeriodSeconds` (30 seconds by default) before
+  SIGKILL. SQL Server shuts down cleanly on SIGTERM, but a busy instance can need longer to checkpoint. The manifest raises it to 120 seconds. A hard kill is survivable (crash recovery on the next start) but makes that start slower, which is what the startup probe's generous threshold is for.
+- `persistentVolumeClaimRetentionPolicy` is spelled out as `Retain` for both deletion and scale-down. That is the default behaviour; writing it down means nobody has to remember it, and it must be changed on purpose to ever auto-delete the database volume.
+- Deleting the StatefulSet leaves `data-sqlserver-0` and `sqlserver-backups` behind. Delete them explicitly (`kubectl -n sqllab delete pvc ...`) when you really want the data gone.
