@@ -75,3 +75,18 @@ Tests for the checker itself: `python3 -m unittest discover -s tests`.
 
 Expected: one row of version information, then the databases with their recovery model. `log_reuse_wait_desc` of
 `LOG_BACKUP` on `LabDb` means the FULL recovery model is waiting for a log backup, as the backup notes warn.
+
+## Walkthrough on kind
+
+This is the order I would run things in.
+
+1. `kind create cluster --name sqllab`.
+2. `kubectl apply -k .` then apply your copy of the Secret from `manifests/secret.example.yaml`. Expected: namespace, Services, StatefulSet, PVC, ConfigMap, CronJobs, NetworkPolicy created.
+3. `kubectl -n sqllab get pods --watch`. Expected: `sqlserver-0` is `Running` but `0/1` for one to a few minutes (startup probe), then `1/1`.
+4. `kubectl -n sqllab port-forward service/sqlserver 1433:1433` and run `sql/init.sql` (see above). Expected: `OrderRows` 1000.
+5. `kubectl -n sqllab create job --from=cronjob/sqlserver-backup first-backup`, then `kubectl -n sqllab logs job/first-backup`. Expected: `Backup finished and verified.`
+6. `kubectl apply -f manifests/restore-test-job.yaml` and `kubectl -n sqllab logs -f job/sqlserver-restore-test`. Expected: the init container reports the server is reachable, then `Restore test passed.`
+7. `kubectl -n sqllab create job --from=cronjob/sqlserver-log-backup first-log`. Expected: success after step 5.
+8. `kubectl delete -k .` and the PVCs when you are done.
+
+If step 3 never reaches `1/1`, go to `docs/troubleshooting.md`.
