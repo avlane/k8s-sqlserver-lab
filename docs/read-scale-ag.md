@@ -44,3 +44,15 @@ which `CLUSTER_TYPE = NONE` does not have. This needs checking before anyone des
 
 If high availability is the actual goal, this is the wrong tool; the documented HA path on Linux uses a cluster manager
 and synchronous replicas, which is a different design from anything in this repo.
+
+## Sketches
+
+`sql/ag/` has three T-SQL files that follow the structure above. What they deliberately leave out:
+
+- exchanging and trusting the certificates between replicas (the commented to-do at the end of the first file),
+- the Kubernetes side: a second StatefulSet replica, port 5022 on the headless Service, `MSSQL_ENABLE_HADR=1`, and a NetworkPolicy that lets the replicas reach each other,
+- what the applications connect to, and who switches the Services when the primary changes,
+- any monitoring of `sys.dm_hadr_database_replica_states` (queue sizes, redo lag).
+
+Replica names in `CREATE AVAILABILITY GROUP` have to match what each instance reports as its server name, which in a container is
+the Pod hostname. I believe that is `sqlserver-0` and `sqlserver-1`, but that is exactly the kind of assumption that only a run settles.
