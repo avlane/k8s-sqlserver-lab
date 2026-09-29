@@ -19,4 +19,15 @@ The lab uses `mcr.microsoft.com/mssql/server` with an explicit cumulative-update
 `2022-CU15-ubuntu-22.04`. The `latest` tag is avoided on purpose: for a database an unplanned engine
 upgrade on a Pod restart is a surprise nobody wants. Tags are pinned to ones that existed on the date of each commit.
 
-## What counts as verified
+## Image tags over time
+
+The commit history shows these bumps (dates are those of the commits in this repository, not Microsoft's release dates):
+
+| change | tag |
+|---|---|
+| first StatefulSet | `2022-CU15-ubuntu-22.04` |
+| March 2025 | `2022-CU16-ubuntu-22.04` |
+| April 2025 (moved into `kustomization.yaml`) | `2022-CU17-ubuntu-22.04` |
+| September 2025 | `2022-CU19-ubuntu-22.04` |
+
+Cumulative updates after CU19 exist and the lab has not moved to them. SQL Server 2025 is covered in `sql-server-2025.md`.
